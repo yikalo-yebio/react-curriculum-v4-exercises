@@ -1,35 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { listFilter } from './utils/listFilter.js';
+import { useCustomHook } from './hooks/useCustomHook.jsx';
+import { Button } from './componets/button.jsx';
 
 export default function StudentWork() {
-  const [tasks, setTasks] = useState([]);
   const [filter, setFilter] = useState('all');
-  const [loading, setLoading] = useState(true);
 
-  //  #1: Data fetching + state + UI logic all mixed together
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setTasks([
-        { id: 1, title: 'Learn React', completed: true },
-        { id: 2, title: 'Refactor code', completed: false },
-        { id: 3, title: 'Organize files', completed: false },
-      ]);
-      setLoading(false);
-    }, 500);
-
-    return () => clearTimeout(timeout);
-  }, []);
-
-  // #2: Filtering logic inside component
-  let visibleTasks = tasks;
-  if (filter === 'completed') {
-    visibleTasks = tasks.filter((task) => task.completed);
-  }
-  if (filter === 'pending') {
-    visibleTasks = tasks.filter((task) => !task.completed);
-  }
+  const { tasks, loading } = useCustomHook();
+  const visibleTasks = listFilter(tasks, filter);
 
   if (loading) {
-    return <p>Loading tasks...</p>;
+    return <p>Loading...</p>;
   }
 
   return (
@@ -39,9 +20,9 @@ export default function StudentWork() {
 
       {/* #4: Repeated button JSX */}
       <div>
-        <button onClick={() => setFilter('all')}>All</button>
-        <button onClick={() => setFilter('completed')}>Completed</button>
-        <button onClick={() => setFilter('pending')}>Pending</button>
+        <Button label="All" onClick={() => setFilter('all')} />
+        <Button label="Completed" onClick={() => setFilter('completed')} />
+        <Button label="Pending" onClick={() => setFilter('pending')} />
         <p>Current filter: {filter}</p>
       </div>
 
