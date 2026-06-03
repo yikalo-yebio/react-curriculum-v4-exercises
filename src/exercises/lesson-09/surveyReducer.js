@@ -18,11 +18,9 @@ export const QUESTION_TYPE_LABELS = {
   [QUESTION_TYPES.RATING]: 'Rating',
 };
 
-// Default question options for multiple choice
+// Default question options
 export const DEFAULT_MULTIPLE_CHOICE_OPTIONS = ['Option A'];
 
-// Factory function to create new questions
-//https://javascript.plainenglish.io/chapter-51-mastering-factory-functions-in-javascript-the-ultimate-guide-379bc2006895
 const createNewQuestion = (payload, questionsLength) => ({
   id: generateId(),
   type: payload.type || QUESTION_TYPES.TEXT,
@@ -38,8 +36,6 @@ const createNewQuestion = (payload, questionsLength) => ({
 
 export function surveyReducer(state, action) {
   switch (action.type) {
-    // ===== MVP ACTIONS (ALREADY WORKING) =====
-
     case 'ADD_QUESTION':
       return {
         ...state,
@@ -88,21 +84,79 @@ export function surveyReducer(state, action) {
         ui: {
           ...state.ui,
           isPreviewMode: !state.ui.isPreviewMode,
-          editingQuestionId: null, // Clear editing when switching modes
+          editingQuestionId: null,
         },
       };
-    // ===== END MVP ACTIONS =========
-    // ===== STUDENT IMPLEMENTATION TASKS =====
 
     case 'UPDATE_QUESTION_TEXT':
-      // TODO: Implement this action
-      console.log('TODO: Implement UPDATE_QUESTION_TEXT action');
-      return state;
+      return {
+        ...state,
+        questions: state.questions.map((q) =>
+          q.id === action.payload.id
+            ? { ...q, question: action.payload.newText }
+            : q
+        ),
+      };
 
     case 'DELETE_QUESTION':
-      // TODO: Implement this action
-      console.log('TODO: Implement DELETE_QUESTION action');
-      return state;
+      return {
+        ...state,
+        questions: state.questions.filter((q) => q.id !== action.payload.id),
+        ui: {
+          ...state.ui,
+          editingQuestionId:
+            state.ui.editingQuestionId === action.payload.id
+              ? null
+              : state.ui.editingQuestionId,
+        },
+      };
+
+    case 'ADD_OPTION_TO_QUESTION':
+      return {
+        ...state,
+        questions: state.questions.map((q) =>
+          q.id === action.payload.questionId &&
+          q.type === QUESTION_TYPES.MULTIPLE_CHOICE
+            ? {
+                ...q,
+                options: [...q.options, action.payload.optionText],
+              }
+            : q
+        ),
+      };
+
+    case 'UPDATE_OPTION_TEXT':
+      return {
+        ...state,
+        questions: state.questions.map((q) =>
+          q.id === action.payload.questionId
+            ? {
+                ...q,
+                options: q.options.map((opt, index) =>
+                  index === action.payload.optionIndex
+                    ? action.payload.newText
+                    : opt
+                ),
+              }
+            : q
+        ),
+      };
+
+    case 'DELETE_OPTION_FROM_QUESTION':
+      return {
+        ...state,
+        questions: state.questions.map((q) => {
+          if (q.id !== action.payload.questionId) return q;
+          if (q.options.length <= 2) return q;
+
+          return {
+            ...q,
+            options: q.options.filter(
+              (_, index) => index !== action.payload.optionIndex
+            ),
+          };
+        }),
+      };
 
     default:
       return state;
